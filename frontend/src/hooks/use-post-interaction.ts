@@ -1,33 +1,8 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { simulationsAPI } from "@/lib/api";
 import toast from "react-hot-toast";
-
-export function useSimulation(id: string) {
-  return useQuery({
-    queryKey: ["simulation", id],
-    queryFn: async () => {
-      const { data } = await simulationsAPI.getById(id);
-      return data.data;
-    },
-    enabled: !!id,
-  });
-}
-
-export function useSimulations(params?: {
-  page?: number;
-  limit?: number;
-  type?: string;
-}) {
-  return useQuery({
-    queryKey: ["simulations", params],
-    queryFn: async () => {
-      const { data } = await simulationsAPI.getAll(params);
-      return data.data;
-    },
-  });
-}
 
 export function usePostInteraction() {
   const queryClient = useQueryClient();
@@ -54,7 +29,9 @@ export function usePostInteraction() {
       queryClient.invalidateQueries({ queryKey: ["student-progress"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Gagal menyimpan interaksi");
+      const message =
+        error.response?.data?.message || "Gagal menyimpan interaksi";
+      toast.error(message);
     },
   });
 }

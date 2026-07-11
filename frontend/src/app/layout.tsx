@@ -8,8 +8,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BUBBLE - Bias Understanding Based Blended Learning Environment",
-  description: "Platform pembelajaran interaktif untuk meningkatkan literasi digital dan critical thinking siswa SMA",
-  keywords: "bubble, learning, critical thinking, digital literacy, bias, education, indonesia",
+  description:
+    "Platform pembelajaran interaktif untuk meningkatkan literasi digital dan critical thinking",
 };
 
 export default function RootLayout({
