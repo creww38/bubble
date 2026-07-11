@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bubble-postgres
+    environment:
+      POSTGRES_DB: bubble_db
+      POSTGRES_USER: bubble_admin
+      POSTGRES_PASSWORD: bubble_secure_pass_2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bubble-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bubble_admin -d bubble_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bubble-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - bubble-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: bubble-backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://bubble_admin:bubble_secure_pass_2024@postgres:5432/bubble_db?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-bubble_access_secret_2024}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-bubble_refresh_secret_2024}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    networks:
+      - bubble-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: bubble-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - bubble-network
+    restart: unless-stopped
+
+networks:
+  bubble-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

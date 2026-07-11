@@ -1,0 +1,418 @@
+// BUBBLE Platform - Database Schema
+// PostgreSQL + Prisma ORM
+// Enterprise Grade Learning Platform
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum SimulationType {
+  INSTAGRAM
+  TWITTER
+  FACEBOOK
+  TIKTOK
+  WHATSAPP
+  NEWS_PORTAL
+  DISCUSSION_FORUM
+}
+
+enum InteractionType {
+  BELIEVE
+  DISBELIEVE
+  FACT_CHECK
+  SEARCH_REFERENCE
+  REPORT
+  BOOKMARK
+}
+
+enum BiasTypeEnum {
+  CONFIRMATION_BIAS
+  ANCHORING_BIAS
+  AVAILABILITY_BIAS
+  HALO_EFFECT
+  BANDWAGON_EFFECT
+  AUTHORITY_BIAS
+  FRAMING_EFFECT
+  SURVIVORSHIP_BIAS
+  SELECTION_BIAS
+  FALSE_CONSENSUS
+  HINDSIGHT_BIAS
+  OUTCOME_BIAS
+}
+
+model User {
+  id                  String              @id @default(uuid())
+  email               String              @unique
+  passwordHash        String              @map("password_hash")
+  fullName            String              @map("full_name")
+  avatarUrl           String?             @map("avatar_url")
+  isVerified          Boolean             @default(false) @map("is_verified")
+  verificationToken   String?             @map("verification_token")
+  resetPasswordToken  String?             @map("reset_password_token")
+  resetPasswordExpiry DateTime?           @map("reset_password_expiry")
+  refreshTokenHash    String?             @map("refresh_token_hash")
+  roles               UserRole[]
+  lastLoginAt         DateTime?           @map("last_login_at")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  studentProfile            StudentProfile?
+  teacherProfile            TeacherProfile?
+  adminProfile              AdminProfile?
+  postInteractions          PostInteraction[]
+  quizAnswers               QuizAnswer[]
+  badges                    UserBadge[]
+  aiInteractions            AIInteraction[]
+  criticalThinkingScores    CriticalThinkingScore[]
+  auditLogs                 AuditLog[]
+  dailyChallengeCompletions DailyChallengeCompletion[]
+
+  @@map("users")
+}
+
+model StudentProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique @map("user_id")
+  xp         Int      @default(0)
+  level      Int      @default(1)
+  totalScore Int      @default(0) @map("total_score")
+  streak     Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classStudents       ClassStudent[]
+  studentAssignments  StudentAssignment[]
+  criticalThinkingScores CriticalThinkingScore[]
+
+  @@map("student_profiles")
+}
+
+model TeacherProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  subject   String?
+  nipy      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes Class[]
+
+  @@map("teacher_profiles")
+}
+
+model AdminProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  role      String   @default("SUPER_ADMIN")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  npsn      String?  @unique
+  address   String?
+  city      String?
+  province  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  classes Class[]
+
+  @@map("schools")
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  grade     Int
+  schoolId  String   @map("school_id")
+  teacherId String   @map("teacher_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher     TeacherProfile  @relation(fields: [teacherId], references: [id])
+  students    ClassStudent[]
+  assignments Assignment[]
+
+  @@map("classes")
+}
+
+model ClassStudent {
+  classId          String @map("class_id")
+  studentProfileId String @map("student_profile_id")
+  enrolledAt       DateTime @default(now()) @map("enrolled_at")
+
+  class   Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student StudentProfile  @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  @@id([classId, studentProfileId])
+  @@map("class_students")
+}
+
+model Simulation {
+  id              String          @id @default(uuid())
+  title           String
+  type            SimulationType
+  description     String?
+  difficultyLevel Int             @default(1) @map("difficulty_level")
+  createdBy       String          @map("created_by")
+  isTemplate      Boolean         @default(false) @map("is_template")
+  thumbnailUrl    String?         @map("thumbnail_url")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  posts       SimulationPost[]
+  assignments Assignment[]
+
+  @@map("simulations")
+}
+
+model SimulationPost {
+  id              String        @id @default(uuid())
+  simulationId    String        @map("simulation_id")
+  authorName      String        @map("author_name")
+  authorAvatar    String?       @map("author_avatar")
+  content         String
+  mediaUrls       Json?         @map("media_urls")
+  biasType        BiasTypeEnum? @map("bias_type")
+  isMisinformation Boolean      @default(false) @map("is_misinformation")
+  factCheckUrl    String?       @map("fact_check_url")
+  metadata        Json?
+  postedAt        DateTime      @default(now()) @map("posted_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  simulation   Simulation        @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  interactions PostInteraction[]
+
+  @@map("simulation_posts")
+}
+
+model PostInteraction {
+  id              String          @id @default(uuid())
+  postId          String          @map("post_id")
+  userId          String          @map("user_id")
+  interactionType InteractionType @map("interaction_type")
+  isCorrect       Boolean?        @map("is_correct")
+  pointsEarned    Int             @default(0) @map("points_earned")
+  timeSpent       Int?            @map("time_spent")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  post SimulationPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("post_interactions")
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  type        String
+  classId     String?  @map("class_id")
+  createdBy   String   @map("created_by")
+  timeLimit   Int?     @map("time_limit")
+  passingScore Int     @default(70) @map("passing_score")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  class       Class?           @relation(fields: [classId], references: [id])
+  questions   QuizQuestion[]
+  assignments Assignment[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id           String   @id @default(uuid())
+  quizId       String   @map("quiz_id")
+  questionText String   @map("question_text")
+  questionType String   @map("question_type")
+  options      Json?
+  correctAnswer Json    @map("correct_answer")
+  explanation  String?
+  points       Int      @default(10)
+  mediaUrl     String?  @map("media_url")
+  orderIndex   Int      @default(0) @map("order_index")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@map("quiz_questions")
+}
+
+model Assignment {
+  id           String    @id @default(uuid())
+  classId      String    @map("class_id")
+  simulationId String?   @map("simulation_id")
+  quizId       String?   @map("quiz_id")
+  title        String
+  description  String?
+  dueDate      DateTime? @map("due_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  class              Class                @relation(fields: [classId], references: [id], onDelete: Cascade)
+  simulation         Simulation?          @relation(fields: [simulationId], references: [id])
+  quiz               Quiz?                @relation(fields: [quizId], references: [id])
+  studentSubmissions StudentAssignment[]
+
+  @@map("assignments")
+}
+
+model StudentAssignment {
+  id           String    @id @default(uuid())
+  assignmentId String    @map("assignment_id")
+  studentId    String    @map("student_id")
+  status       String    @default("PENDING")
+  score        Int?
+  startedAt    DateTime? @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  assignment Assignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers    QuizAnswer[]
+
+  @@map("student_assignments")
+}
+
+model QuizAnswer {
+  id                  String   @id @default(uuid())
+  studentAssignmentId String   @map("student_assignment_id")
+  questionId          String   @map("question_id")
+  answer              Json
+  isCorrect           Boolean  @default(false) @map("is_correct")
+  pointsAwarded       Int      @default(0) @map("points_awarded")
+  timeTaken           Int?     @map("time_taken")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  studentAssignment StudentAssignment @relation(fields: [studentAssignmentId], references: [id], onDelete: Cascade)
+  question          QuizQuestion      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_answers")
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  iconUrl     String?  @map("icon_url")
+  category    String   @default("ACHIEVEMENT")
+  criteria    Json
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId    String   @map("user_id")
+  badgeId   String   @map("badge_id")
+  awardedAt DateTime @default(now()) @map("awarded_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
+model CriticalThinkingScore {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  evidenceEvaluation Int      @default(0) @map("evidence_evaluation")
+  sourceValidation   Int      @default(0) @map("source_validation")
+  logicalReasoning   Int      @default(0) @map("logical_reasoning")
+  biasRecognition    Int      @default(0) @map("bias_recognition")
+  decisionMaking     Int      @default(0) @map("decision_making")
+  openMindedness     Int      @default(0) @map("open_mindedness")
+  totalScore         Int      @default(0) @map("total_score")
+  calculatedAt       DateTime @default(now()) @map("calculated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("critical_thinking_scores")
+}
+
+model AIInteraction {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  simulationId    String?  @map("simulation_id")
+  userMessage     String   @map("user_message")
+  aiResponse      String   @map("ai_response")
+  interactionType String   @map("interaction_type")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  simulation Simulation? @relation(fields: [simulationId], references: [id])
+
+  @@map("ai_interactions")
+}
+
+model DailyChallenge {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  type        String
+  reward      Int      @default(50)
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  completions DailyChallengeCompletion[]
+
+  @@map("daily_challenges")
+}
+
+model DailyChallengeCompletion {
+  id          String   @id @default(uuid())
+  challengeId String   @map("challenge_id")
+  userId      String   @map("user_id")
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@map("daily_challenge_completions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  oldValue  Json?    @map("old_value")
+  newValue  Json?    @map("new_value")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
