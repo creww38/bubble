@@ -1,0 +1,16 @@
+{
+  "name": "bubble-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BUBBLE - Bias Understanding Based Blended Learning Environment",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm start",
+    "vercel-build": "cd frontend && npm install && npm run build"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
