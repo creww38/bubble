@@ -3,8 +3,21 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Users, BookOpen, TrendingUp, Activity, School,
-  Shield, Database, Settings, BarChart3, PieChart
+  Users,
+  BookOpen,
+  TrendingUp,
+  Activity,
+  School,
+  Shield,
+  Database,
+  Settings,
+  BarChart3,
+  PieChart,
+  Mail,
+  Bell,
+  LogOut,
+  User,
+  GraduationCap,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +26,7 @@ import { formatDate } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['admin-dashboard'],
+    queryKey: ["admin-dashboard"],
     queryFn: async () => {
       const { data } = await analyticsAPI.getDashboard();
       return data.data;
@@ -21,7 +34,7 @@ export default function AdminDashboard() {
   });
 
   const { data: commonBiases } = useQuery({
-    queryKey: ['common-biases'],
+    queryKey: ["common-biases"],
     queryFn: async () => {
       const { data } = await analyticsAPI.getCommonBiases();
       return data.data;
@@ -37,12 +50,48 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: "Total Users", value: stats?.totalUsers || 0, icon: Users, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30" },
-    { label: "Total Siswa", value: stats?.totalStudents || 0, icon: Users, color: "text-green-500", bg: "bg-green-100 dark:bg-green-900/30" },
-    { label: "Total Guru", value: stats?.totalTeachers || 0, icon: School, color: "text-purple-500", bg: "bg-purple-100 dark:bg-purple-900/30" },
-    { label: "Total Simulasi", value: stats?.totalSimulations || 0, icon: BookOpen, color: "text-orange-500", bg: "bg-orange-100 dark:bg-orange-900/30" },
-    { label: "Interaksi", value: stats?.totalInteractions || 0, icon: Activity, color: "text-pink-500", bg: "bg-pink-100 dark:bg-pink-900/30" },
-    { label: "Akurasi Rata-rata", value: "78%", icon: TrendingUp, color: "text-teal-500", bg: "bg-teal-100 dark:bg-teal-900/30" },
+    {
+      label: "Total Users",
+      value: stats?.totalUsers || 0,
+      icon: Users,
+      color: "text-blue-500",
+      bg: "bg-blue-100 dark:bg-blue-900/30",
+    },
+    {
+      label: "Total Siswa",
+      value: stats?.totalStudents || 0,
+      icon: Users,
+      color: "text-green-500",
+      bg: "bg-green-100 dark:bg-green-900/30",
+    },
+    {
+      label: "Total Guru",
+      value: stats?.totalTeachers || 0,
+      icon: School,
+      color: "text-purple-500",
+      bg: "bg-purple-100 dark:bg-purple-900/30",
+    },
+    {
+      label: "Total Simulasi",
+      value: stats?.totalSimulations || 0,
+      icon: BookOpen,
+      color: "text-orange-500",
+      bg: "bg-orange-100 dark:bg-orange-900/30",
+    },
+    {
+      label: "Interaksi",
+      value: stats?.totalInteractions || 0,
+      icon: Activity,
+      color: "text-pink-500",
+      bg: "bg-pink-100 dark:bg-pink-900/30",
+    },
+    {
+      label: "Akurasi Rata-rata",
+      value: "78%",
+      icon: TrendingUp,
+      color: "text-teal-500",
+      bg: "bg-teal-100 dark:bg-teal-900/30",
+    },
   ];
 
   return (
@@ -64,10 +113,18 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" size="sm" leftIcon={<Settings className="h-4 w-4" />}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Settings className="h-4 w-4" />}
+            >
               Pengaturan
             </Button>
-            <Button variant="gradient" size="sm" leftIcon={<Database className="h-4 w-4" />}>
+            <Button
+              variant="gradient"
+              size="sm"
+              leftIcon={<Database className="h-4 w-4" />}
+            >
               Backup Database
             </Button>
           </div>
@@ -152,28 +209,40 @@ export default function AdminDashboard() {
                         <td className="p-3 font-medium">{user.name}</td>
                         <td className="p-3 text-sm text-slate-600">{user.email}</td>
                         <td className="p-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            user.role === 'ADMIN' ? 'bg-red-100 text-red-700' :
-                            user.role === 'TEACHER' ? 'bg-blue-100 text-blue-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.role === "ADMIN"
+                                ? "bg-red-100 text-red-700"
+                                : user.role === "TEACHER"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
                             {user.role}
                           </span>
                         </td>
                         <td className="p-3">
-                          <span className={`inline-flex items-center gap-1 text-xs ${
-                            user.status === 'Active' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            <span className={`w-2 h-2 rounded-full ${
-                              user.status === 'Active' ? 'bg-green-500' : 'bg-red-500'
-                            }`} />
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs ${
+                              user.status === "Active" ? "text-green-600" : "text-red-600"
+                            }`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                user.status === "Active" ? "bg-green-500" : "bg-red-500"
+                              }`}
+                            />
                             {user.status}
                           </span>
                         </td>
                         <td className="p-3">
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="icon-sm">✏️</Button>
-                            <Button variant="ghost" size="icon-sm">🗑️</Button>
+                            <Button variant="ghost" size="icon-sm">
+                              ✏️
+                            </Button>
+                            <Button variant="ghost" size="icon-sm">
+                              🗑️
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -195,13 +264,18 @@ export default function AdminDashboard() {
                     <span className="text-sm font-medium w-8">#{index + 1}</span>
                     <div className="flex-1">
                       <div className="flex justify-between mb-1">
-                        <span className="text-sm">{item.biasType?.replace(/_/g, ' ')}</span>
+                        <span className="text-sm">{item.biasType?.replace(/_/g, " ")}</span>
                         <span className="text-sm font-semibold">{item.count}</span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
-                          style={{ width: `${Math.min((item.count / (commonBiases?.[0]?.count || 1)) * 100, 100)}%` }}
+                          style={{
+                            width: `${Math.min(
+                              (item.count / (commonBiases?.[0]?.count || 1)) * 100,
+                              100
+                            )}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -229,7 +303,9 @@ export default function AdminDashboard() {
                 ].map((service, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm">{service.label}</span>
-                    <span className={`text-xs font-medium ${service.color} flex items-center gap-1`}>
+                    <span
+                      className={`text-xs font-medium ${service.color} flex items-center gap-1`}
+                    >
                       <span className="w-2 h-2 rounded-full bg-current" />
                       {service.status}
                     </span>
@@ -248,7 +324,10 @@ export default function AdminDashboard() {
                   { action: "Quiz diselesaikan", time: "1 jam lalu", user: "Ahmad Rizki" },
                   { action: "Badge diberikan", time: "2 jam lalu", user: "Dewi Kartika" },
                 ].map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800/50 transition">
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800/50 transition"
+                  >
                     <div className="w-2 h-2 mt-2 rounded-full bg-indigo-500" />
                     <div>
                       <p className="text-sm font-medium">{activity.action}</p>
